@@ -5,51 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Masukkan Kode</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Animasi masuk card */
-    @keyframes fadeSlideUp {
-      0% { opacity: 0; transform: translateY(40px) scale(0.95); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    /* Animasi shake (salah kode) */
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-6px); }
-      80% { transform: translateX(6px); }
-    }
-
-    .animate-fadeSlideUp {
-      animation: fadeSlideUp 0.8s ease forwards;
-    }
-
-    .animate-shake {
-      animation: shake 0.4s ease;
-    }
-  </style>
 </head>
-<body class="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-700 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4">
 
-  <div id="card" class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 opacity-0 animate-fadeSlideUp">
-    <h1 class="text-3xl font-extrabold mb-6 text-center text-gray-800 tracking-wide">
-      🔐 Masukkan Kode Akses
-    </h1>
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
     
-    <input id="codeInput" type="text" placeholder="Masukkan kode di sini"
-      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400 mb-4 transition duration-300" />
+    <!-- Icon -->
+    <div class="flex items-center justify-center w-16 h-16 mx-auto rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M15 7a2 2 0 11-4 0 2 2 0 014 0zM12 14v7m0-7a2 2 0 100-4 2 2 0 000 4z" />
+      </svg>
+    </div>
 
+    <!-- Title -->
+    <h1 class="text-2xl font-bold text-gray-800 mb-2">Enter Your Code</h1>
+    <p class="text-gray-500 mb-6">Enter your access code to reveal the hidden content</p>
+
+    <!-- Input -->
+    <div class="text-left mb-4">
+      <label for="codeInput" class="block text-sm font-medium text-gray-700 mb-1">Access Code</label>
+      <input id="codeInput" type="text" placeholder="Enter your code here.." 
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+    </div>
+
+    <!-- Button -->
     <button onclick="checkCode()" 
-      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02] active:scale-95 focus:ring-4 focus:ring-indigo-300">
-      🚀 Cek Kode
+      class="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:opacity-90 transition">
+      Validate Code
     </button>
 
-    <p id="message" class="mt-6 text-center font-semibold min-h-[2rem] transition-all duration-300"></p>
+    <!-- Message -->
+    <p id="message" class="mt-4 text-sm font-medium min-h-[1.5rem]"></p>
 
-    <div class="mt-6 text-center">
-      <a href="admin-login.html" class="text-indigo-500 hover:text-indigo-700 font-medium underline transition-colors">
-        Login Admin
+    <!-- Admin link -->
+    <div class="mt-6">
+      <a href="admin-login.html" class="inline-flex items-center text-gray-500 hover:text-gray-700 text-sm font-medium">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M12 11c0 .867-.896 1.364-1.59.948l-1.198-.719a1 1 0 01-.212-1.578l1.198-.719C11.104 8.636 12 9.133 12 10v1zm0 0v1m0 4h.01" />
+        </svg>
+        Admin Panel
       </a>
     </div>
   </div>
@@ -64,7 +60,6 @@
           return {};
         }
       }
-      // Default kode contoh
       return {
         "12345": "✅ Selamat datang! Kode Anda benar.",
         "admin2024": "🔒 Ini adalah pesan rahasia untuk admin."
@@ -75,24 +70,19 @@
       const input = document.getElementById('codeInput').value.trim();
       const codes = getCodes();
       const messageEl = document.getElementById('message');
-      const card = document.getElementById('card');
 
       if (!input) {
-        messageEl.textContent = "⚠️ Silakan masukkan kode.";
-        messageEl.className = "mt-6 text-center font-semibold text-red-600 animate-shake";
-        card.classList.add("animate-shake");
-        setTimeout(() => card.classList.remove("animate-shake"), 500);
+        messageEl.textContent = "⚠️ Please enter a code.";
+        messageEl.className = "mt-4 text-sm font-medium text-red-600";
         return;
       }
 
       if (codes[input]) {
         messageEl.textContent = codes[input];
-        messageEl.className = "mt-6 text-center font-semibold text-green-600 scale-105 transition-transform";
+        messageEl.className = "mt-4 text-sm font-medium text-green-600";
       } else {
-        messageEl.textContent = "❌ Kode salah atau tidak ditemukan.";
-        messageEl.className = "mt-6 text-center font-semibold text-red-600 animate-shake";
-        card.classList.add("animate-shake");
-        setTimeout(() => card.classList.remove("animate-shake"), 500);
+        messageEl.textContent = "❌ Invalid code.";
+        messageEl.className = "mt-4 text-sm font-medium text-red-600";
       }
     }
   </script>
