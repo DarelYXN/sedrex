@@ -7,11 +7,27 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
-  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+  <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold text-gray-800">Admin Panel</h1>
       <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">Logout</button>
+    </div>
+
+    <!-- Statistik -->
+    <div class="grid grid-cols-3 gap-4 mb-8">
+      <div class="bg-gray-100 p-4 rounded-lg shadow text-center">
+        <p class="text-gray-600">Total Codes</p>
+        <p id="totalCodes" class="text-2xl font-bold text-indigo-600">0</p>
+      </div>
+      <div class="bg-gray-100 p-4 rounded-lg shadow text-center">
+        <p class="text-gray-600">Active Codes</p>
+        <p id="activeCodes" class="text-2xl font-bold text-green-600">0</p>
+      </div>
+      <div class="bg-gray-100 p-4 rounded-lg shadow text-center">
+        <p class="text-gray-600">Inactive Codes</p>
+        <p id="inactiveCodes" class="text-2xl font-bold text-red-600">0</p>
+      </div>
     </div>
 
     <!-- Tombol Add New Code -->
@@ -21,7 +37,7 @@
       </button>
     </div>
 
-    <!-- Form Tambah/Edit Kode (disembunyikan default) -->
+    <!-- Form Tambah/Edit Kode -->
     <form id="formKode" class="space-y-4 mb-8 hidden">
       <input type="hidden" id="editIndex" value="" />
       <div>
@@ -47,6 +63,7 @@
           <tr class="bg-indigo-600 text-white">
             <th class="border border-gray-300 px-4 py-2 text-left">Kode</th>
             <th class="border border-gray-300 px-4 py-2 text-left">Teks Rahasia</th>
+            <th class="border border-gray-300 px-4 py-2 text-center">Status</th>
             <th class="border border-gray-300 px-4 py-2 text-center">Aksi</th>
           </tr>
         </thead>
@@ -75,7 +92,11 @@
     const logoutBtn = document.getElementById('logoutBtn');
     const toggleFormBtn = document.getElementById('toggleFormBtn');
 
-    // Fungsi ambil data
+    const totalEl = document.getElementById('totalCodes');
+    const activeEl = document.getElementById('activeCodes');
+    const inactiveEl = document.getElementById('inactiveCodes');
+
+    // Ambil data dari localStorage
     function getCodes() {
       const data = localStorage.getItem('codesData');
       if (data) {
@@ -88,9 +109,22 @@
       return {};
     }
 
-    // Fungsi simpan data
+    // Simpan ke localStorage
     function saveCodes(codes) {
       localStorage.setItem('codesData', JSON.stringify(codes));
+    }
+
+    // Update statistik
+    function updateStats() {
+      const codes = getCodes();
+      let total = 0, active = 0, inactive = 0;
+      Object.values(codes).forEach(item => {
+        total++;
+        if (item.active) active++; else inactive++;
+      });
+      totalEl.textContent = total;
+      activeEl.textContent = active;
+      inactiveEl.textContent = inactive;
     }
 
     // Render tabel
@@ -99,7 +133,8 @@
       tableBody.innerHTML = '';
       const keys = Object.keys(codes);
       if (keys.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Belum ada kode tersimpan.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Belum ada kode tersimpan.</td></tr>';
+        updateStats();
         return;
       }
       keys.forEach(key => {
@@ -111,12 +146,23 @@
         tr.appendChild(tdKode);
 
         const tdTeks = document.createElement('td');
-        tdTeks.textContent = codes[key];
+        tdTeks.textContent = codes[key].teks;
         tdTeks.className = "border border-gray-300 px-4 py-2";
         tr.appendChild(tdTeks);
 
+        const tdStatus = document.createElement('td');
+        tdStatus.textContent = codes[key].active ? "Active" : "Inactive";
+        tdStatus.className = "border border-gray-300 px-4 py-2 text-center " + (codes[key].active ? "text-green-600 font-semibold" : "text-red-600 font-semibold");
+        tr.appendChild(tdStatus);
+
         const tdAksi = document.createElement('td');
         tdAksi.className = "border border-gray-300 px-4 py-2 text-center";
+
+        const btnToggle = document.createElement('button');
+        btnToggle.textContent = codes[key].active ? "Deactivate" : "Activate";
+        btnToggle.className = 'bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mr-2';
+        btnToggle.onclick = () => toggleStatus(key);
+        tdAksi.appendChild(btnToggle);
 
         const btnEdit = document.createElement('button');
         btnEdit.textContent = 'Edit';
@@ -133,6 +179,7 @@
         tr.appendChild(tdAksi);
         tableBody.appendChild(tr);
       });
+      updateStats();
     }
 
     // Submit form
@@ -163,12 +210,13 @@
         }
       }
 
-      codes[kode] = teks;
+      codes[kode] = { teks: teks, active: true };
       saveCodes(codes);
       renderTable();
       form.reset();
       editIndexInput.value = '';
-      form.classList.add('hidden'); // sembunyikan form setelah simpan
+      form.classList.add('hidden');
+      toggleFormBtn.textContent = "+ Add New Code";
       showMessage('Data berhasil disimpan.', 'green');
     });
 
@@ -176,9 +224,10 @@
     function editKode(kode) {
       const codes = getCodes();
       kodeInput.value = kode;
-      teksInput.value = codes[kode];
+      teksInput.value = codes[kode].teks;
       editIndexInput.value = kode;
-      form.classList.remove('hidden'); // tampilkan form kalau edit
+      form.classList.remove('hidden');
+      toggleFormBtn.textContent = "Close Form";
       kodeInput.focus();
       showMessage('Mode edit: ubah data dan klik Simpan.', 'blue');
     }
@@ -195,8 +244,18 @@
           form.reset();
           editIndexInput.value = '';
           form.classList.add('hidden');
+          toggleFormBtn.textContent = "+ Add New Code";
         }
       }
+    }
+
+    // Toggle status active/inactive
+    function toggleStatus(kode) {
+      const codes = getCodes();
+      codes[kode].active = !codes[kode].active;
+      saveCodes(codes);
+      renderTable();
+      showMessage(`Kode "${kode}" sekarang ${codes[kode].active ? "Active" : "Inactive"}.`, 'green');
     }
 
     // Show message
@@ -208,7 +267,7 @@
       }, 4000);
     }
 
-    // Tombol toggle form
+    // Toggle form
     toggleFormBtn.addEventListener('click', () => {
       if (form.classList.contains('hidden')) {
         form.classList.remove('hidden');
