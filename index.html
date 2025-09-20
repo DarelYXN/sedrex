@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Masukkan Kode</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-400 to-indigo-600 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-8">
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Masukkan Kode Akses</h1>
+    <input id="codeInput" type="text" placeholder="Masukkan kode di sini" 
+           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4" />
+    <button onclick="checkCode()" 
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors">
+      Cek Kode
+    </button>
+    <p id="message" class="mt-4 text-center font-semibold min-h-[2rem]"></p>
+    <div class="mt-6 text-center">
+      <a href="admin-login.html" class="text-indigo-200 hover:text-indigo-100 underline">Login Admin</a>
+    </div>
+  </div>
+
+  <script>
+    function getCodes() {
+      const data = localStorage.getItem('codesData');
+      if (data) {
+        try {
+          return JSON.parse(data);
+        } catch {
+          return {};
+        }
+      }
+      // Default kode contoh
+      return {
+        "12345": "Selamat datang! Kode Anda benar.",
+        "admin2024": "Ini adalah pesan rahasia untuk admin."
+      };
+    }
+
+    function checkCode() {
+      const input = document.getElementById('codeInput').value.trim();
+      const codes = getCodes();
+      const messageEl = document.getElementById('message');
+
+      if (!input) {
+        messageEl.textContent = "Silakan masukkan kode.";
+        messageEl.className = "mt-4 text-center font-semibold text-red-600";
+        return;
+      }
+
+      if (codes[input]) {
+        messageEl.textContent = codes[input];
+        messageEl.className = "mt-4 text-center font-semibold text-green-600";
+      } else {
+        messageEl.textContent = "Kode salah atau tidak ditemukan.";
+        messageEl.className = "mt-4 text-center font-semibold text-red-600";
+      }
+    }
+  </script>
+</body>
+  </html>
