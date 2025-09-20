@@ -1,199 +1,231 @@
 <!DOCTYPE html>
-<html lang="id" >
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Panel - Kelola Kode</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
-  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Admin Panel</h1>
-      <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">Logout</button>
-    </div>
 
-    <form id="formKode" class="space-y-4 mb-8">
-      <input type="hidden" id="editIndex" value="" />
+  <!-- Header -->
+  <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6 mb-6 flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-orange-500 to-red-500 text-white shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c.53 0 1.04-.21 1.41-.59.38-.37.59-.88.59-1.41V5l-2-1-2 1v4c0 .53.21 1.04.59 1.41.37.38.88.59 1.41.59z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10l-7-5-7 5z" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+    </div>
+    <div class="space-x-4">
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 font-medium">View Public Page</a>
+      <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition">Logout</button>
+    </div>
+  </div>
+
+  <!-- Statistik -->
+  <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-6">
+      <p class="text-gray-500">Total Codes</p>
+      <p id="totalCodes" class="text-2xl font-bold">0</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+      <p class="text-gray-500">Active Codes</p>
+      <p id="activeCodes" class="text-2xl font-bold text-green-600">0</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+      <p class="text-gray-500">Inactive Codes</p>
+      <p id="inactiveCodes" class="text-2xl font-bold text-gray-500">0</p>
+    </div>
+  </div>
+
+  <!-- Form tambah kode -->
+  <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6 mb-6">
+    <form id="formKode" class="space-y-4">
+      <input type="hidden" id="editKey" value="" />
       <div>
-        <label for="kode" class="block font-semibold mb-1">Kode Akses:</label>
-        <input type="text" id="kode" placeholder="Masukkan kode akses" required
-               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <label class="block font-semibold mb-1">Kode Akses</label>
+        <input id="kode" type="text" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div>
-        <label for="teks" class="block font-semibold mb-1">Teks Rahasia:</label>
-        <textarea id="teks" rows="4" placeholder="Masukkan teks rahasia" required
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"></textarea>
+        <label class="block font-semibold mb-1">Teks Rahasia</label>
+        <textarea id="teks" rows="3" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></textarea>
       </div>
-      <button type="submit" 
-              class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg w-full transition-colors">
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg w-full md:w-auto">
         Simpan
       </button>
     </form>
-
-    <div class="overflow-x-auto">
-      <table class="w-full table-auto border-collapse border border-gray-300">
-        <thead>
-          <tr class="bg-indigo-600 text-white">
-            <th class="border border-gray-300 px-4 py-2 text-left">Kode</th>
-            <th class="border border-gray-300 px-4 py-2 text-left">Teks Rahasia</th>
-            <th class="border border-gray-300 px-4 py-2 text-center">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <!-- Data kode akan muncul di sini -->
-        </tbody>
-      </table>
-    </div>
-
     <p id="message" class="mt-4 text-center font-semibold min-h-[1.5rem]"></p>
   </div>
 
-  <script>
-    // Cek login admin
-    if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
-      alert('Anda harus login terlebih dahulu!');
-      window.location.href = 'admin-login.html';
-    }
+  <!-- Manage Codes -->
+  <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-gray-800">Manage Codes</h2>
+      <button onclick="document.getElementById('formKode').scrollIntoView({behavior:'smooth'})"
+        class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-4 py-2 rounded-lg shadow hover:opacity-90">
+        + Add New Code
+      </button>
+    </div>
+    <div id="codesList" class="space-y-4">
+      <!-- Card kode muncul di sini -->
+    </div>
+  </div>
 
-    const form = document.getElementById('formKode');
-    const kodeInput = document.getElementById('kode');
-    const teksInput = document.getElementById('teks');
-    const editIndexInput = document.getElementById('editIndex');
-    const messageEl = document.getElementById('message');
-    const tableBody = document.getElementById('tableBody');
-    const logoutBtn = document.getElementById('logoutBtn');
+<script>
+  // Cek login admin
+  if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    alert('Anda harus login terlebih dahulu!');
+    window.location.href = 'admin-login.html';
+  }
 
-    function getCodes() {
-      const data = localStorage.getItem('codesData');
-      if (data) {
-        try {
-          return JSON.parse(data);
-        } catch {
-          return {};
-        }
-      }
-      return {};
-    }
+  const form = document.getElementById('formKode');
+  const kodeInput = document.getElementById('kode');
+  const teksInput = document.getElementById('teks');
+  const editKeyInput = document.getElementById('editKey');
+  const messageEl = document.getElementById('message');
+  const codesList = document.getElementById('codesList');
+  const logoutBtn = document.getElementById('logoutBtn');
 
-    function saveCodes(codes) {
-      localStorage.setItem('codesData', JSON.stringify(codes));
-    }
+  function getCodes() {
+    const data = localStorage.getItem('codesData');
+    return data ? JSON.parse(data) : {};
+  }
 
-    function renderTable() {
-      const codes = getCodes();
-      tableBody.innerHTML = '';
-      const keys = Object.keys(codes);
-      if (keys.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Belum ada kode tersimpan.</td></tr>';
-        return;
-      }
-      keys.forEach(key => {
-        const tr = document.createElement('tr');
+  function saveCodes(codes) {
+    localStorage.setItem('codesData', JSON.stringify(codes));
+  }
 
-        const tdKode = document.createElement('td');
-        tdKode.textContent = key;
-        tdKode.className = "border border-gray-300 px-4 py-2";
-        tr.appendChild(tdKode);
-
-        const tdTeks = document.createElement('td');
-        tdTeks.textContent = codes[key];
-        tdTeks.className = "border border-gray-300 px-4 py-2";
-        tr.appendChild(tdTeks);
-
-        const tdAksi = document.createElement('td');
-        tdAksi.className = "border border-gray-300 px-4 py-2 text-center";
-
-        const btnEdit = document.createElement('button');
-        btnEdit.textContent = 'Edit';
-        btnEdit.className = 'bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded mr-2';
-        btnEdit.onclick = () => editKode(key);
-        tdAksi.appendChild(btnEdit);
-
-        const btnDelete = document.createElement('button');
-        btnDelete.textContent = 'Hapus';
-        btnDelete.className = 'bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded';
-        btnDelete.onclick = () => deleteKode(key);
-        tdAksi.appendChild(btnDelete);
-
-        tr.appendChild(tdAksi);
-
-        tableBody.appendChild(tr);
-      });
-    }
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const kode = kodeInput.value.trim();
-      const teks = teksInput.value.trim();
-      if (!kode || !teks) {
-        showMessage('Kode dan teks harus diisi.', 'red');
-        return;
-      }
-
-      const codes = getCodes();
-      const editIndex = editIndexInput.value;
-
-      if (editIndex) {
-        if (editIndex !== kode && codes[kode]) {
-          showMessage('Kode sudah ada, gunakan kode lain.', 'red');
-          return;
-        }
-        if (editIndex !== kode) {
-          delete codes[editIndex];
-        }
-      } else {
-        if (codes[kode]) {
-          showMessage('Kode sudah ada, gunakan kode lain.', 'red');
-          return;
-        }
-      }
-
-      codes[kode] = teks;
-      saveCodes(codes);
-      renderTable();
-      form.reset();
-      editIndexInput.value = '';
-      showMessage('Data berhasil disimpan.', 'green');
+  function renderStats(codes) {
+    const total = Object.keys(codes).length;
+    let active = 0, inactive = 0;
+    Object.values(codes).forEach(c => {
+      if (c.active) active++; else inactive++;
     });
+    document.getElementById('totalCodes').textContent = total;
+    document.getElementById('activeCodes').textContent = active;
+    document.getElementById('inactiveCodes').textContent = inactive;
+  }
 
-    function editKode(kode) {
-      const codes = getCodes();
-      kodeInput.value = kode;
-      teksInput.value = codes[kode];
-      editIndexInput.value = kode;
-      kodeInput.focus();
-      showMessage('Mode edit: ubah data dan klik Simpan.', 'blue');
+  function renderCodes() {
+    const codes = getCodes();
+    renderStats(codes);
+    codesList.innerHTML = '';
+
+    if (Object.keys(codes).length === 0) {
+      codesList.innerHTML = '<p class="text-gray-500 text-center">Belum ada kode tersimpan.</p>';
+      return;
     }
 
-    function deleteKode(kode) {
-      if (confirm(`Yakin ingin menghapus kode "${kode}"?`)) {
-        const codes = getCodes();
-        delete codes[kode];
-        saveCodes(codes);
-        renderTable();
-        showMessage('Data berhasil dihapus.', 'green');
-        if (editIndexInput.value === kode) {
-          form.reset();
-          editIndexInput.value = '';
-        }
-      }
-    }
+    Object.entries(codes).forEach(([key, val]) => {
+      const card = document.createElement('div');
+      card.className = "p-4 border rounded-lg shadow flex justify-between items-start";
 
-    function showMessage(text, color) {
-      messageEl.textContent = text;
-      messageEl.style.color = color;
-      setTimeout(() => {
-        messageEl.textContent = '';
-      }, 4000);
-    }
+      const left = document.createElement('div');
+      left.innerHTML = `
+        <p class="font-mono font-bold">${key}</p>
+        <p class="text-gray-600">${val.text}</p>
+        <p class="text-xs text-gray-400 mt-1">Created: ${val.date}</p>
+      `;
 
-    logoutBtn.addEventListener('click', () => {
-      sessionStorage.removeItem('adminLoggedIn');
-      window.location.href = 'admin-login.html';
+      const right = document.createElement('div');
+      right.className = "flex flex-col items-end space-y-2";
+
+      // status badge
+      const status = document.createElement('span');
+      status.textContent = val.active ? 'Active' : 'Inactive';
+      status.className = val.active
+        ? "px-2 py-1 text-sm rounded bg-green-100 text-green-700 font-medium"
+        : "px-2 py-1 text-sm rounded bg-gray-200 text-gray-600 font-medium";
+      right.appendChild(status);
+
+      // tombol
+      const btnGroup = document.createElement('div');
+      btnGroup.className = "flex space-x-2";
+      btnGroup.innerHTML = `
+        <button class="px-3 py-1 rounded bg-yellow-400 hover:bg-yellow-500 text-black" onclick="editCode('${key}')">Edit</button>
+        <button class="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white" onclick="deleteCode('${key}')">Delete</button>
+      `;
+      const toggleBtn = document.createElement('button');
+      toggleBtn.textContent = val.active ? "Deactivate" : "Activate";
+      toggleBtn.className = "px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white";
+      toggleBtn.onclick = () => toggleCode(key);
+      btnGroup.appendChild(toggleBtn);
+
+      right.appendChild(btnGroup);
+      card.appendChild(left);
+      card.appendChild(right);
+
+      codesList.appendChild(card);
     });
+  }
 
-    renderTable();
-  </script>
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const kode = kodeInput.value.trim();
+    const teks = teksInput.value.trim();
+    if (!kode || !teks) return;
+
+    const codes = getCodes();
+    const editKey = editKeyInput.value;
+
+    if (editKey && editKey !== kode) {
+      delete codes[editKey];
+    }
+
+    codes[kode] = {
+      text: teks,
+      active: true,
+      date: new Date().toLocaleDateString()
+    };
+
+    saveCodes(codes);
+    renderCodes();
+    form.reset();
+    editKeyInput.value = '';
+    showMessage('Kode berhasil disimpan.', 'green');
+  });
+
+  function editCode(kode) {
+    const codes = getCodes();
+    kodeInput.value = kode;
+    teksInput.value = codes[kode].text;
+    editKeyInput.value = kode;
+    showMessage('Edit mode: ubah data dan klik Simpan.', 'blue');
+  }
+
+  function deleteCode(kode) {
+    if (!confirm(`Yakin ingin menghapus kode "${kode}"?`)) return;
+    const codes = getCodes();
+    delete codes[kode];
+    saveCodes(codes);
+    renderCodes();
+    showMessage('Kode berhasil dihapus.', 'green');
+  }
+
+  function toggleCode(kode) {
+    const codes = getCodes();
+    codes[kode].active = !codes[kode].active;
+    saveCodes(codes);
+    renderCodes();
+  }
+
+  function showMessage(text, color) {
+    messageEl.textContent = text;
+    messageEl.style.color = color;
+    setTimeout(() => { messageEl.textContent = ''; }, 3000);
+  }
+
+  logoutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem('adminLoggedIn');
+    window.location.href = 'admin-login.html';
+  });
+
+  renderCodes();
+</script>
 </body>
 </html>
