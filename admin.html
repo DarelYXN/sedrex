@@ -1,231 +1,137 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Panel - Kelola Kode</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen p-6">
-  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Admin Panel</h1>
-      <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">Logout</button>
+<body class="bg-gradient-to-r from-gray-700 to-gray-900 min-h-screen text-gray-800">
+  <div class="max-w-4xl mx-auto py-10 px-4">
+    <!-- Judul -->
+    <h1 class="text-3xl font-bold text-center text-white mb-8">Admin Panel</h1>
+
+    <!-- Statistik -->
+    <div class="grid grid-cols-3 gap-6 text-center mb-8">
+      <div class="bg-white rounded-xl shadow p-4">
+        <p class="text-lg font-semibold">Total Kode</p>
+        <p id="totalCodes" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4">
+        <p class="text-lg font-semibold">Aktif</p>
+        <p id="activeCodes" class="text-2xl font-bold text-green-600">0</p>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4">
+        <p class="text-lg font-semibold">Nonaktif</p>
+        <p id="inactiveCodes" class="text-2xl font-bold text-red-600">0</p>
+      </div>
     </div>
 
-    <!-- Tombol Add New Code -->
-    <div class="mb-6 text-right">
-      <button id="addCodeBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-        + Add New Code
+    <!-- Tombol New Code -->
+    <div class="text-center mb-6">
+      <button id="newCodeBtn" 
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold">
+        + New Code
       </button>
     </div>
 
-    <!-- Form Tambah/Edit Kode (hidden default) -->
-    <form id="formKode" class="space-y-4 mb-8 hidden">
-      <input type="hidden" id="editIndex" value="" />
-      <div>
-        <label for="kode" class="block font-semibold mb-1">Kode Akses:</label>
-        <input type="text" id="kode" placeholder="Masukkan kode akses" required
-               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-      </div>
-      <div>
-        <label for="teks" class="block font-semibold mb-1">Teks Rahasia:</label>
-        <textarea id="teks" rows="4" placeholder="Masukkan teks rahasia" required
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"></textarea>
-      </div>
-      <div class="flex space-x-3">
-        <button type="submit" 
-                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors">
-          Simpan
-        </button>
-        <button type="button" id="cancelBtn"
-                class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition-colors">
-          Batal
-        </button>
-      </div>
-    </form>
+    <!-- Form Tambah Kode (hidden dulu) -->
+    <div id="newCodeForm" class="hidden bg-white p-6 rounded-xl shadow mb-6">
+      <h2 class="text-xl font-bold mb-4">Buat Kode Baru</h2>
+      <input id="codeInput" type="text" placeholder="Masukkan kode" 
+             class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4">
+      <select id="statusInput" 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4">
+        <option value="active">Aktif</option>
+        <option value="inactive">Nonaktif</option>
+      </select>
+      <button id="saveCodeBtn" 
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+        Simpan
+      </button>
+    </div>
 
-    <div class="overflow-x-auto">
-      <table class="w-full table-auto border-collapse border border-gray-300">
-        <thead>
-          <tr class="bg-indigo-600 text-white">
-            <th class="border border-gray-300 px-4 py-2 text-left">Kode</th>
-            <th class="border border-gray-300 px-4 py-2 text-left">Teks Rahasia</th>
-            <th class="border border-gray-300 px-4 py-2 text-center">Aksi</th>
+    <!-- Daftar Kode -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <table class="w-full text-left">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2">Kode</th>
+            <th class="px-4 py-2">Status</th>
           </tr>
         </thead>
-        <tbody id="tableBody">
-          <!-- Data kode akan muncul di sini -->
+        <tbody id="codesTable" class="divide-y divide-gray-200">
+          <!-- Data kode muncul di sini -->
         </tbody>
       </table>
     </div>
-
-    <p id="message" class="mt-4 text-center font-semibold min-h-[1.5rem]"></p>
   </div>
 
   <script>
-    // Cek login admin
-    if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
-      alert('Anda harus login terlebih dahulu!');
-      window.location.href = 'admin-login.html';
-    }
+    const newCodeBtn = document.getElementById("newCodeBtn");
+    const newCodeForm = document.getElementById("newCodeForm");
+    const saveCodeBtn = document.getElementById("saveCodeBtn");
+    const codeInput = document.getElementById("codeInput");
+    const statusInput = document.getElementById("statusInput");
+    const codesTable = document.getElementById("codesTable");
 
-    const form = document.getElementById('formKode');
-    const kodeInput = document.getElementById('kode');
-    const teksInput = document.getElementById('teks');
-    const editIndexInput = document.getElementById('editIndex');
-    const messageEl = document.getElementById('message');
-    const tableBody = document.getElementById('tableBody');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const addCodeBtn = document.getElementById('addCodeBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
+    const totalCodes = document.getElementById("totalCodes");
+    const activeCodes = document.getElementById("activeCodes");
+    const inactiveCodes = document.getElementById("inactiveCodes");
 
-    // ambil data
-    function getCodes() {
-      const data = localStorage.getItem('codesData');
-      if (data) {
-        try {
-          return JSON.parse(data);
-        } catch {
-          return [];
-        }
-      }
-      return [];
-    }
+    // Load data awal
+    let codes = JSON.parse(localStorage.getItem("codes")) || [];
 
-    // simpan data
-    function saveCodes(codes) {
-      localStorage.setItem('codesData', JSON.stringify(codes));
-    }
+    // Tampilkan form hanya saat tombol diklik
+    newCodeBtn.addEventListener("click", () => {
+      newCodeForm.classList.toggle("hidden");
+    });
 
-    // render tabel
-    function renderTable() {
-      const codes = getCodes();
-      tableBody.innerHTML = '';
-      if (codes.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Belum ada kode tersimpan.</td></tr>';
+    // Simpan kode baru
+    saveCodeBtn.addEventListener("click", () => {
+      const code = codeInput.value.trim();
+      const status = statusInput.value;
+
+      if (!code) {
+        alert("Kode tidak boleh kosong!");
         return;
       }
-      codes.forEach((item, index) => {
-        const tr = document.createElement('tr');
 
-        const tdKode = document.createElement('td');
-        tdKode.textContent = item.kode;
-        tdKode.className = "border border-gray-300 px-4 py-2";
-        tr.appendChild(tdKode);
+      codes.push({ code, status });
+      localStorage.setItem("codes", JSON.stringify(codes));
 
-        const tdTeks = document.createElement('td');
-        tdTeks.textContent = item.teks;
-        tdTeks.className = "border border-gray-300 px-4 py-2";
-        tr.appendChild(tdTeks);
+      codeInput.value = "";
+      statusInput.value = "active";
+      newCodeForm.classList.add("hidden");
 
-        const tdAksi = document.createElement('td');
-        tdAksi.className = "border border-gray-300 px-4 py-2 text-center";
+      renderCodes();
+    });
 
-        const btnEdit = document.createElement('button');
-        btnEdit.textContent = 'Edit';
-        btnEdit.className = 'bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded mr-2';
-        btnEdit.onclick = () => editKode(index);
-        tdAksi.appendChild(btnEdit);
+    // Render tabel kode
+    function renderCodes() {
+      codesTable.innerHTML = "";
+      let active = 0, inactive = 0;
 
-        const btnDelete = document.createElement('button');
-        btnDelete.textContent = 'Hapus';
-        btnDelete.className = 'bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded';
-        btnDelete.onclick = () => deleteKode(index);
-        tdAksi.appendChild(btnDelete);
+      codes.forEach(c => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-4 py-2">${c.code}</td>
+          <td class="px-4 py-2 ${c.status === "active" ? "text-green-600" : "text-red-600"}">
+            ${c.status}
+          </td>
+        `;
+        codesTable.appendChild(row);
 
-        tr.appendChild(tdAksi);
-        tableBody.appendChild(tr);
+        if (c.status === "active") active++;
+        else inactive++;
       });
+
+      totalCodes.textContent = codes.length;
+      activeCodes.textContent = active;
+      inactiveCodes.textContent = inactive;
     }
 
-    // submit form
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const kode = kodeInput.value.trim();
-      const teks = teksInput.value.trim();
-      if (!kode || !teks) {
-        showMessage('Kode dan teks harus diisi.', 'red');
-        return;
-      }
-
-      let codes = getCodes();
-      const editIndex = editIndexInput.value;
-
-      if (editIndex) {
-        const idx = parseInt(editIndex);
-        // cek duplikat kode (kecuali dirinya sendiri)
-        if (codes.some((c, i) => c.kode === kode && i !== idx)) {
-          showMessage('Kode sudah ada, gunakan kode lain.', 'red');
-          return;
-        }
-        codes[idx] = { kode, teks };
-      } else {
-        if (codes.some(c => c.kode === kode)) {
-          showMessage('Kode sudah ada, gunakan kode lain.', 'red');
-          return;
-        }
-        codes.push({ kode, teks });
-      }
-
-      saveCodes(codes);
-      renderTable();
-      form.reset();
-      editIndexInput.value = '';
-      form.classList.add('hidden'); // sembunyikan form
-      showMessage('Data berhasil disimpan.', 'green');
-    });
-
-    function editKode(index) {
-      const codes = getCodes();
-      kodeInput.value = codes[index].kode;
-      teksInput.value = codes[index].teks;
-      editIndexInput.value = index;
-      form.classList.remove('hidden');
-      kodeInput.focus();
-      showMessage('Mode edit: ubah data dan klik Simpan.', 'blue');
-    }
-
-    function deleteKode(index) {
-      if (confirm("Yakin ingin menghapus kode ini?")) {
-        let codes = getCodes();
-        codes.splice(index, 1);
-        saveCodes(codes);
-        renderTable();
-        showMessage('Data berhasil dihapus.', 'green');
-        form.reset();
-        editIndexInput.value = '';
-        form.classList.add('hidden');
-      }
-    }
-
-    function showMessage(text, color) {
-      messageEl.textContent = text;
-      messageEl.style.color = color;
-      setTimeout(() => {
-        messageEl.textContent = '';
-      }, 4000);
-    }
-
-    logoutBtn.addEventListener('click', () => {
-      sessionStorage.removeItem('adminLoggedIn');
-      window.location.href = 'admin-login.html';
-    });
-
-    addCodeBtn.addEventListener('click', () => {
-      form.reset();
-      editIndexInput.value = '';
-      form.classList.remove('hidden');
-      kodeInput.focus();
-    });
-
-    cancelBtn.addEventListener('click', () => {
-      form.reset();
-      editIndexInput.value = '';
-      form.classList.add('hidden');
-    });
-
-    renderTable();
+    renderCodes();
   </script>
 </body>
 </html>
