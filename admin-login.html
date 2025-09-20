@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin Login (Encrypted)</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* small tweak to match screenshot rounded card look on mobile */
+    body { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+  </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center px-4">
 
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
+    <!-- icon -->
     <div class="flex items-center justify-center w-16 h-16 mx-auto rounded-xl bg-gradient-to-r from-orange-500 to-red-500 mb-6 shadow-md">
-      <!-- shield icon -->
       <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M12 11c.5304 0 1.0391-.2107 1.4142-.5858C13.7893 10.0391 14 9.5304 14 9V5l-2-1-2 1v4c0 .5304.2107 1.0391.5858 1.4142.3751.3751.8838.5858 1.4142.5858z" />
@@ -33,8 +37,7 @@
         <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
         <input id="password" type="password" placeholder="Enter password"
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition pr-10" required />
-        <button type="button" id="togglePwd" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600">
-          <!-- eye icon will toggle -->
+        <button type="button" id="togglePwd" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600" aria-label="Toggle password visibility">
           <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -59,29 +62,28 @@
 
 <script>
 /*
-  Client-side encryption example (Web Crypto API)
-  USAGE:
-  - Set GENERATE_CREDENTIALS = true to create encrypted payloads from plain USERNAME/Password.
-    Open console, submit form -> encrypted values will be printed (copy and paste into ENCRYPTED_CREDENTIALS).
-  - Then set GENERATE_CREDENTIALS = false and use ENCRYPTED_CREDENTIALS as the stored values.
-  SECURITY NOTE:
-  - Keeping APP_PASSPHRASE in client JS is not secure. This is for prototyping only.
-  - Recommended: verify credentials on server and store password hashed with bcrypt/scrypt/argon2.
+  Client-side encrypted credentials (ready-to-use).
+  NOTE: This is for demo/offline only. Client-side passphrase + JS can be inspected by anyone.
 */
 
-const GENERATE_CREDENTIALS = false; // set true only to generate ciphertexts (dev)
-const APP_PASSPHRASE = 'replace_this_with_a_strong_passphrase_but_not_in_public'; // secret used to derive key (if in client, visible)
-const PBKDF2_SALT = null; // when generating, salt will be random per entry. When using stored encrypted tokens, salt is included in payload
+const GENERATE_CREDENTIALS = false; // keep false for normal use
+const APP_PASSPHRASE = 'replace_this_with_a_strong_passphrase_but_not_in_public'; // same passphrase used to generate below
 
-// EXAMPLE placeholder for encrypted credentials (fill with generated output then set GENERATE_CREDENTIALS=false)
+// <<< Already-generated encrypted payloads for username "DarelYXN" and password "Dd@@1122" >>>
 const ENCRYPTED_CREDENTIALS = {
-  // Example structure:
-  // username: { ct: "...", iv: "...", salt: "..." },
-  // password: { ct: "...", iv: "...", salt: "..." }
-  // <-- paste real generated values here after generation
+  "username": {
+    "ct": "3DzGZJKFXuMMtGQuVflVgIXe2P4B2BaqgQ==",
+    "iv": "oN14s+Yt6uxPvDxx",
+    "salt": "3Y6SlFuubazksCvyIXSoXQ=="
+  },
+  "password": {
+    "ct": "uTgIoJ9eSC8+Q2SQQ91Ggjf5cHzx7o3EB2r9zQ==",
+    "iv": "ruIyaNkgwVuxivdU",
+    "salt": "v9NluV2Z07ZpV1d+O28dFg=="
+  }
 };
 
-// ---- helpers: base64 / encoding ----
+// ---- helpers ----
 function bufToBase64(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf)));
 }
@@ -95,22 +97,85 @@ function bufToStr(buf) {
   return new TextDecoder().decode(buf);
 }
 
-// ---- derive AES key from passphrase + salt ----
+// derive key (PBKDF2 -> AES-GCM)
 async function deriveKey(passphrase, salt) {
-  const passKey = await crypto.subtle.importKey(
-    'raw',
-    strToBuf(passphrase),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveKey']
-  );
+  const passKey = await crypto.subtle.importKey('raw', strToBuf(passphrase), { name: 'PBKDF2' }, false, ['deriveKey']);
   const key = await crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256'
-    },
+    { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+    passKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+  return key;
+}
+
+async function decryptString(obj, passphrase) {
+  try {
+    const salt = base64ToBuf(obj.salt);
+    const iv = base64ToBuf(obj.iv);
+    const ct = base64ToBuf(obj.ct);
+    const key = await deriveKey(passphrase, salt);
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ct);
+    return bufToStr(plainBuf);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Toggle password visibility
+document.getElementById('togglePwd').addEventListener('click', () => {
+  const pwd = document.getElementById('password');
+  const eye = document.getElementById('eyeIcon');
+  if (pwd.type === 'password') {
+    pwd.type = 'text';
+    eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a10.05 10.05 0 013.742-5.225M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`;
+  } else {
+    pwd.type = 'password';
+    eye.innerHTML = `
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+  }
+});
+
+// Form submit -> decrypt stored and compare
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const inputUser = document.getElementById('username').value.trim();
+  const inputPass = document.getElementById('password').value;
+  const errorEl = document.getElementById('errorMsg');
+
+  if (GENERATE_CREDENTIALS) {
+    // (Not used in normal flow) - kept for dev generation convenience
+    errorEl.textContent = 'GENERATE_CREDENTIALS mode enabled. Not allowed here.';
+    return;
+  }
+
+  if (!ENCRYPTED_CREDENTIALS.username || !ENCRYPTED_CREDENTIALS.password) {
+    errorEl.textContent = 'Stored encrypted credentials not configured. (Use generator)';
+    return;
+  }
+
+  const decUser = await decryptString(ENCRYPTED_CREDENTIALS.username, APP_PASSPHRASE);
+  const decPass = await decryptString(ENCRYPTED_CREDENTIALS.password, APP_PASSPHRASE);
+
+  if (decUser === null || decPass === null) {
+    errorEl.textContent = 'Unable to decrypt stored credentials. Check passphrase / payload.';
+    return;
+  }
+
+  if (inputUser === decUser && inputPass === decPass) {
+    sessionStorage.setItem('adminLoggedIn', 'true');
+    window.location.href = 'admin.html';
+  } else {
+    errorEl.textContent = 'Username atau password salah.';
+  }
+});
+</script>
+</body>
+</html>    },
     passKey,
     { name: 'AES-GCM', length: 256 },
     true,
