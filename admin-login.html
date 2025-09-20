@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-gray-700 to-gray-900 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-8">
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Login Admin</h1>
+    <form id="loginForm" class="space-y-4">
+      <input id="username" type="text" placeholder="Username" 
+             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+      <input id="password" type="password" placeholder="Password" 
+             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+      <button type="submit" 
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors">
+        Login
+      </button>
+    </form>
+    <p id="errorMsg" class="mt-4 text-center text-red-600 font-semibold min-h-[1.5rem]"></p>
+    <div class="mt-6 text-center">
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">Kembali ke Halaman Utama</a>
+    </div>
+  </div>
+
+  <script>
+    const USERNAME = "DarelYXN";
+    const PASSWORD = "Dd@@1122";
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      const errorMsg = document.getElementById('errorMsg');
+
+      if (username === USERNAME && password === PASSWORD) {
+        // Simpan status login di sessionStorage
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        window.location.href = "admin.html";
+      } else {
+        errorMsg.textContent = "Username atau password salah.";
+      }
+    });
+  </script>
+</body>
+</html>
