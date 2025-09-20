@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Panel - Kelola Kode</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Admin Panel</h1>
+      <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">Logout</button>
+    </div>
+
+    <form id="formKode" class="space-y-4 mb-8">
+      <input type="hidden" id="editIndex" value="" />
+      <div>
+        <label for="kode" class="block font-semibold mb-1">Kode Akses:</label>
+        <input type="text" id="kode" placeholder="Masukkan kode akses" required
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label for="teks" class="block font-semibold mb-1">Teks Rahasia:</label>
+        <textarea id="teks" rows="4" placeholder="Masukkan teks rahasia" required
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"></textarea>
+      </div>
+      <button type="submit" 
+              class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg w-full transition-colors">
+        Simpan
+      </button>
+    </form>
+
+    <div class="overflow-x-auto">
+      <table class="w-full table-auto border-collapse border border-gray-300">
+        <thead>
+          <tr class="bg-indigo-600 text-white">
+            <th class="border border-gray-300 px-4 py-2 text-left">Kode</th>
+            <th class="border border-gray-300 px-4 py-2 text-left">Teks Rahasia</th>
+            <th class="border border-gray-300 px-4 py-2 text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Data kode akan muncul di sini -->
+        </tbody>
+      </table>
+    </div>
+
+    <p id="message" class="mt-4 text-center font-semibold min-h-[1.5rem]"></p>
+  </div>
+
+  <script>
+    // Cek login admin
+    if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+      alert('Anda harus login terlebih dahulu!');
+      window.location.href = 'admin-login.html';
+    }
+
+    const form = document.getElementById('formKode');
+    const kodeInput = document.getElementById('kode');
+    const teksInput = document.getElementById('teks');
+    const editIndexInput = document.getElementById('editIndex');
+    const messageEl = document.getElementById('message');
+    const tableBody = document.getElementById('tableBody');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function getCodes() {
+      const data = localStorage.getItem('codesData');
+      if (data) {
+        try {
+          return JSON.parse(data);
+        } catch {
+          return {};
+        }
+      }
+      return {};
+    }
+
+    function saveCodes(codes) {
+      localStorage.setItem('codesData', JSON.stringify(codes));
+    }
+
+    function renderTable() {
+      const codes = getCodes();
+      tableBody.innerHTML = '';
+      const keys = Object.keys(codes);
+      if (keys.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Belum ada kode tersimpan.</td></tr>';
+        return;
+      }
+      keys.forEach(key => {
+        const tr = document.createElement('tr');
+
+        const tdKode = document.createElement('td');
+        tdKode.textContent = key;
+        tdKode.className = "border border-gray-300 px-4 py-2";
+        tr.appendChild(tdKode);
+
+        const tdTeks = document.createElement('td');
+        tdTeks.textContent = codes[key];
+        tdTeks.className = "border border-gray-300 px-4 py-2";
+        tr.appendChild(tdTeks);
+
+        const tdAksi = document.createElement('td');
+        tdAksi.className = "border border-gray-300 px-4 py-2 text-center";
+
+        const btnEdit = document.createElement('button');
+        btnEdit.textContent = 'Edit';
+        btnEdit.className = 'bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded mr-2';
+        btnEdit.onclick = () => editKode(key);
+        tdAksi.appendChild(btnEdit);
+
+        const btnDelete = document.createElement('button');
+        btnDelete.textContent = 'Hapus';
+        btnDelete.className = 'bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded';
+        btnDelete.onclick = () => deleteKode(key);
+        tdAksi.appendChild(btnDelete);
+
+        tr.appendChild(tdAksi);
+
+        tableBody.appendChild(tr);
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const kode = kodeInput.value.trim();
+      const teks = teksInput.value.trim();
+      if (!kode || !teks) {
+        showMessage('Kode dan teks harus diisi.', 'red');
+        return;
+      }
+
+      const codes = getCodes();
+      const editIndex = editIndexInput.value;
+
+      if (editIndex) {
+        if (editIndex !== kode && codes[kode]) {
+          showMessage('Kode sudah ada, gunakan kode lain.', 'red');
+          return;
+        }
+        if (editIndex !== kode) {
+          delete codes[editIndex];
+        }
+      } else {
+        if (codes[kode]) {
+          showMessage('Kode sudah ada, gunakan kode lain.', 'red');
+          return;
+        }
+      }
+
+      codes[kode] = teks;
+      saveCodes(codes);
+      renderTable();
+      form.reset();
+      editIndexInput.value = '';
+      showMessage('Data berhasil disimpan.', 'green');
+    });
+
+    function editKode(kode) {
+      const codes = getCodes();
+      kodeInput.value = kode;
+      teksInput.value = codes[kode];
+      editIndexInput.value = kode;
+      kodeInput.focus();
+      showMessage('Mode edit: ubah data dan klik Simpan.', 'blue');
+    }
+
+    function deleteKode(kode) {
+      if (confirm(`Yakin ingin menghapus kode "${kode}"?`)) {
+        const codes = getCodes();
+        delete codes[kode];
+        saveCodes(codes);
+        renderTable();
+        showMessage('Data berhasil dihapus.', 'green');
+        if (editIndexInput.value === kode) {
+          form.reset();
+          editIndexInput.value = '';
+        }
+      }
+    }
+
+    function showMessage(text, color) {
+      messageEl.textContent = text;
+      messageEl.style.color = color;
+      setTimeout(() => {
+        messageEl.textContent = '';
+      }, 4000);
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('adminLoggedIn');
+      window.location.href = 'admin-login.html';
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
