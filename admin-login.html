@@ -1,49 +1,206 @@
 <!DOCTYPE html>
-<html lang="id" >
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login Admin</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login (Encrypted)</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-r from-gray-700 to-gray-900 min-h-screen flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-8">
-    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Login Admin</h1>
-    <form id="loginForm" class="space-y-4">
-      <input id="username" type="text" placeholder="Username" 
-             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
-      <input id="password" type="password" placeholder="Password" 
-             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
-      <button type="submit" 
-              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors">
-        Login
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center px-4">
+
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
+    <div class="flex items-center justify-center w-16 h-16 mx-auto rounded-xl bg-gradient-to-r from-orange-500 to-red-500 mb-6 shadow-md">
+      <!-- shield icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 11c.5304 0 1.0391-.2107 1.4142-.5858C13.7893 10.0391 14 9.5304 14 9V5l-2-1-2 1v4c0 .5304.2107 1.0391.5858 1.4142.3751.3751.8838.5858 1.4142.5858z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10l-7-5-7 5z" />
+      </svg>
+    </div>
+
+    <h1 class="text-2xl font-bold text-gray-800 mb-1">Admin Login</h1>
+    <p class="text-gray-500 mb-6">Enter your admin credentials to manage codes</p>
+
+    <form id="loginForm" class="space-y-4 text-left">
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+        <input id="username" type="text" placeholder="Enter username"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition" required />
+      </div>
+
+      <div class="relative">
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input id="password" type="password" placeholder="Enter password"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition pr-10" required />
+        <button type="button" id="togglePwd" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600">
+          <!-- eye icon will toggle -->
+          <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
+      </div>
+
+      <button id="submitBtn" type="submit"
+        class="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-red-500 hover:opacity-90 transition">
+        Sign In
       </button>
     </form>
-    <p id="errorMsg" class="mt-4 text-center text-red-600 font-semibold min-h-[1.5rem]"></p>
-    <div class="mt-6 text-center">
-      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">Kembali ke Halaman Utama</a>
+
+    <p id="errorMsg" class="mt-4 text-center text-red-600 font-medium min-h-[1.5rem]"></p>
+
+    <div class="mt-6">
+      <a href="index.html" class="text-gray-500 hover:text-gray-700 text-sm font-medium">&larr; Back to Code Input</a>
     </div>
   </div>
 
-  <script>
-    const USERNAME = "DarelYXN";
-    const PASSWORD = "Dd@@1122";
+<script>
+/*
+  Client-side encryption example (Web Crypto API)
+  USAGE:
+  - Set GENERATE_CREDENTIALS = true to create encrypted payloads from plain USERNAME/Password.
+    Open console, submit form -> encrypted values will be printed (copy and paste into ENCRYPTED_CREDENTIALS).
+  - Then set GENERATE_CREDENTIALS = false and use ENCRYPTED_CREDENTIALS as the stored values.
+  SECURITY NOTE:
+  - Keeping APP_PASSPHRASE in client JS is not secure. This is for prototyping only.
+  - Recommended: verify credentials on server and store password hashed with bcrypt/scrypt/argon2.
+*/
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
+const GENERATE_CREDENTIALS = false; // set true only to generate ciphertexts (dev)
+const APP_PASSPHRASE = 'replace_this_with_a_strong_passphrase_but_not_in_public'; // secret used to derive key (if in client, visible)
+const PBKDF2_SALT = null; // when generating, salt will be random per entry. When using stored encrypted tokens, salt is included in payload
 
-      const errorMsg = document.getElementById('errorMsg');
+// EXAMPLE placeholder for encrypted credentials (fill with generated output then set GENERATE_CREDENTIALS=false)
+const ENCRYPTED_CREDENTIALS = {
+  // Example structure:
+  // username: { ct: "...", iv: "...", salt: "..." },
+  // password: { ct: "...", iv: "...", salt: "..." }
+  // <-- paste real generated values here after generation
+};
 
-      if (username === USERNAME && password === PASSWORD) {
-        // Simpan status login di sessionStorage
-        sessionStorage.setItem('adminLoggedIn', 'true');
-        window.location.href = "admin.html";
-      } else {
-        errorMsg.textContent = "Username atau password salah.";
-      }
-    });
-  </script>
+// ---- helpers: base64 / encoding ----
+function bufToBase64(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function base64ToBuf(b64) {
+  return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+}
+function strToBuf(str) {
+  return new TextEncoder().encode(str);
+}
+function bufToStr(buf) {
+  return new TextDecoder().decode(buf);
+}
+
+// ---- derive AES key from passphrase + salt ----
+async function deriveKey(passphrase, salt) {
+  const passKey = await crypto.subtle.importKey(
+    'raw',
+    strToBuf(passphrase),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveKey']
+  );
+  const key = await crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    passKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt','decrypt']
+  );
+  return key;
+}
+
+// ---- encrypt / decrypt ----
+async function encryptString(plain, passphrase) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(passphrase, salt);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, strToBuf(plain));
+  return {
+    ct: bufToBase64(ct),
+    iv: bufToBase64(iv),
+    salt: bufToBase64(salt)
+  };
+}
+
+async function decryptString(obj, passphrase) {
+  try {
+    const salt = base64ToBuf(obj.salt);
+    const iv = base64ToBuf(obj.iv);
+    const ct = base64ToBuf(obj.ct);
+    const key = await deriveKey(passphrase, salt);
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ct);
+    return bufToStr(plainBuf);
+  } catch (e) {
+    return null; // decryption failed
+  }
+}
+
+// ---- DOM interactions ----
+document.getElementById('togglePwd').addEventListener('click', () => {
+  const pwd = document.getElementById('password');
+  const eye = document.getElementById('eyeIcon');
+  if (pwd.type === 'password') {
+    pwd.type = 'text';
+    eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a10.05 10.05 0 013.742-5.225M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`;
+  } else {
+    pwd.type = 'password';
+    eye.innerHTML = `
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+  }
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const inputUser = document.getElementById('username').value.trim();
+  const inputPass = document.getElementById('password').value;
+  const errorEl = document.getElementById('errorMsg');
+
+  // If GENERATE_CREDENTIALS true => generate encrypted constants from given plaintext (developer use only)
+  if (GENERATE_CREDENTIALS) {
+    const u = await encryptString(inputUser, APP_PASSPHRASE);
+    const p = await encryptString(inputPass, APP_PASSPHRASE);
+    console.log('COPY THESE into ENCRYPTED_CREDENTIALS constant and then set GENERATE_CREDENTIALS=false:');
+    console.log({ username: u, password: p });
+    errorEl.textContent = 'Generated encrypted payloads. Check console and paste into ENCRYPTED_CREDENTIALS.';
+    return;
+  }
+
+  // Normal verification: decrypt stored credentials and compare
+  if (!ENCRYPTED_CREDENTIALS.username || !ENCRYPTED_CREDENTIALS.password) {
+    errorEl.textContent = 'Stored encrypted credentials not configured. (Use generator)';
+    return;
+  }
+
+  // Try decrypt username & password with app passphrase
+  const decUser = await decryptString(ENCRYPTED_CREDENTIALS.username, APP_PASSPHRASE);
+  const decPass = await decryptString(ENCRYPTED_CREDENTIALS.password, APP_PASSPHRASE);
+
+  if (decUser === null || decPass === null) {
+    errorEl.textContent = 'Unable to decrypt stored credentials. Check passphrase / payload.';
+    return;
+  }
+
+  if (inputUser === decUser && inputPass === decPass) {
+    sessionStorage.setItem('adminLoggedIn', 'true');
+    // success — redirect
+    window.location.href = 'admin.html';
+  } else {
+    errorEl.textContent = 'Username atau password salah.';
+  }
+});
+</script>
 </body>
 </html>
